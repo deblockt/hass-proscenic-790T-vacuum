@@ -1,4 +1,4 @@
-from vacuum_proscenic import Vacuum
+from custom_components.proscenic.vacuum_proscenic import Vacuum
 from aioconsole import ainput
 import asyncio
 import logging
