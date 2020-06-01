@@ -32,8 +32,10 @@ vacuum:
     host: "<vacuum-ip>"
     deviceId: ""
     token: ""
+    authCode: ""
     userId: ""
     name: ""
+    sleep_duration_on_exit: # default 60. number of second waiting before reconnection (if you use proscenic app)
 ```
 
 deviceId, token and userId can be retrieved using the Proscenic robotic application :
@@ -42,11 +44,12 @@ deviceId, token and userId can be retrieved using the Proscenic robotic applicat
 3. Open the proscenic application, and open the vacuum view
 4. Reopen  Packet capture 
     1. click on the first line
-    2. click on the line `47.91.67.181:20008`
-    3. get you informations ![screenshot](./doc/packet_with_info.png)
-5. you can add you vacuum on lovelace ui entities
+    2. click on the line `<your_vacuum_ip>:8888`
+    3. get you informations ![screenshot](./doc/packet_with_info.jpg)
+5. you can add your vacuum on lovelace ui entities
 
 ## Know issue
 
-- At home assistant startup the vacuum cleaner if not retrieved. You should perform an action on home assistant to get le vacuum cleaner status. 
+- At home assistant startup the vacuum cleaner status is not retrieved. You should perform an action on home assistant to get the vacuum cleaner status. 
 - If you start the proscenic application, the status of the vacuum cleaner will not be refreshed on home assistant for 60 seconds.
+- If you start the proscenic application, you will be disconnected 60 seconds later. You can configure this time using `sleep_duration_on_exit` configuration.

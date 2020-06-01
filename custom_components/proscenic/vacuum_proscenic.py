@@ -54,13 +54,15 @@ class Vacuum():
                 writer = input_writer
             
             header = b'\xd2\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\xeb\x27\xea\x27\x00\x00\x00\x00\x00\x00'
-            body = b'{"cmd":0,"control":{"authCode":"252997","deviceIp":"' \
+            body = b'{"cmd":0,"control":{"authCode":"' \
+                + str.encode(self.auth['authCode']) \
+                + b'","deviceIp":"' \
                 + str.encode(self.ip) \
                 + b'","devicePort":"8888","targetId":"' \
                 + str.encode(self.auth['deviceId']) \
-                + b'","targetType":"3"},"seq":0,"value":{' \
+                + b'","targetType":"3"},"seq":0,"value":' \
                 + command  \
-                + b'},"version":"1.5.11"}'
+                + b',"version":"1.5.11"}'
             _LOGGER.debug('send command {}'.format(str(body)))
             writer.write(header + body)
             await writer.drain()
@@ -121,6 +123,8 @@ class Vacuum():
     async def verify_vacuum_online(self):
         try:
             await self._send_command(b'{"transitCmd":"131"}')
+            if self.work_state == WorkState.POWER_OFF or self.work_state == WorkState.OTHER_POWER_OFF:
+                self.work_state = WorkState.PENDING
         except VacuumUnavailable:
             self.work_state = WorkState.POWER_OFF 
             self._call_listners()

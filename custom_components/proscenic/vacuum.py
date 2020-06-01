@@ -48,12 +48,16 @@ SUPPORT_PROSCENIC = (
 CONF_DEVICE_ID = 'deviceId'
 CONF_TOKEN = 'token'
 CONF_USER_ID = 'userId'
+CONF_SLEEP = 'sleep_duration_on_exit'
+CONF_AUTH_CODE = 'authCode'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_USER_ID): cv.string,
+    vol.Required(CONF_AUTH_CODE): cv.string,
+    vol.Optional(CONF_SLEEP, default = 60): int,
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -79,9 +83,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         CONF_TOKEN: config[CONF_TOKEN],
         CONF_USER_ID: config[CONF_USER_ID],
+        CONF_AUTH_CODE: config[CONF_AUTH_CODE]
     }
     name = config[CONF_NAME] if CONF_NAME in config else '790T vacuum'
-    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop)
+    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP]})
     vacuums = [ProscenicVacuum(device, name)]
     hass.loop.create_task(device.listen_state_change())
     
