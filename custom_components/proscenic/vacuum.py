@@ -18,7 +18,7 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    VacuumDevice,
+    VacuumEntity,
     PLATFORM_SCHEMA
 )
 from homeassistant.const import (
@@ -94,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(vacuums, update_before_add = False)
 
 
-class ProscenicVacuum(VacuumDevice):
+class ProscenicVacuum(VacuumEntity):
     """790T Vacuums such as Deebot."""
 
     def __init__(self, device, name):
