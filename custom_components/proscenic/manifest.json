@@ -5,7 +5,7 @@
     "issue_tracker": "https://github.com/deblockt/hass-proscenic-790T-vacuum/issues",
     "dependencies": [],
     "codeowners": [
-        "Thomas Deblock <deblock.thomas.62@gmail.com>"
+        "deblockt"
     ],
     "requirements": []
 }
