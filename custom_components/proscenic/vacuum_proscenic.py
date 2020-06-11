@@ -2,6 +2,7 @@ import asyncio
 import json
 from enum import Enum
 import logging
+from .vacuum_map_generator import build_map
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,19 +28,29 @@ class Vacuum():
         self.auth = auth
         self.device_id = auth['deviceId']
         self.sleep_duration_on_exit = config['sleep_duration_on_exit'] if 'sleep_duration_on_exit' in config  else 60
-        
+        self.map_path = config['map_path'] if 'map_path' in config  else '/tmp/map.svg'
+
+    async def start_map_generation(self):
+        while True:
+            try:
+                await self._wait_for_map_input()
+            except:
+                _LOGGER.debug('can not contact the vacuum. Wait 60 second before retry. (maybe that the vacuum switch is off)')
+                await asyncio.sleep(60)
+                pass
+
     async def listen_state_change(self):
         try:
             await self._refresh_loop()
         except:
             _LOGGER.exception('error while listening proscenic vacuum state change')
-        
+
     def subcribe(self, subscriber):
         self.listner.append(subscriber)
-        
+
     async def clean(self):
         await self._send_command(b'{"transitCmd":"100"}')
-    
+
     async def stop(self):
         await self._send_command(b'{"transitCmd":"102"}')
 
@@ -66,18 +77,15 @@ class Vacuum():
             _LOGGER.debug('send command {}'.format(str(body)))
             writer.write(header + body)
             await writer.drain()
-
-            if not input_writer:
-                writer.close();
-                await writer.wait_closed()
         except OSError:
             raise VacuumUnavailable('can not connect to the vacuum. Turn on the physical switch button.')
 
     async def _ping(self, writer):
+        _LOGGER.debug('send ping request')
         body = b'\x14\x00\x00\x00\x00\x01\xc8\x00\x00\x00\x01\x00\x22\x27\x00\x00\x00\x00\x00\x00'
         writer.write(body)
         await writer.drain()
-        
+
     async def _login(self, writer):
         header = b'\xfb\x00\x00\x00\x10\x00\xc8\x00\x00\x00\x29\x27\x2a\x27\x00\x00\x00\x00\x00\x00'
         body = b'{"cmd":0,"control":{"targetId":""},"seq":0,"value":{"appKey":"67ce4fabe562405d9492cad9097e09bf","deviceId":"' \
@@ -95,7 +103,7 @@ class Vacuum():
         while not disconnected:
             data = await reader.read(1000)
             if data != b'':
-                _LOGGER.debug(str(data))
+                _LOGGER.debug('receive from state refresh: {}'.format(str(data)))
                 data = self._extract_json(data)
                 if data and'msg' in data and data['msg'] == 'exit succeed':
                     _LOGGER.warn('receive exit succeed - I have been disconnected')
@@ -120,12 +128,57 @@ class Vacuum():
 
         return disconnected
 
+    async def _get_map(self):
+        (reader, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
+        await self._send_command(b'{"transitCmd":"131"}', writer)
+        read_data = ''
+        while True:
+            data = await reader.read(1000)
+            if data == b'':
+                break
+            try:
+                read_data = read_data + data.decode()
+                #_LOGGER.info('read data {}'.format(read_data))
+                nb_openning = read_data.count('{')
+                nb_close = read_data.count('}')
+                if nb_openning > 0 and nb_openning == nb_close:
+                    #_LOGGER.info('return valid json {}'.format(read_data))
+                    return read_data
+                elif nb_close > nb_openning:
+                    #_LOGGER.info('malformed json json {}'.format(read_data))
+                    read_data = ''
+            except:
+                _LOGGER.error('unreadable data {}'.format(data))
+                read_data = ''
+
+    async def _wait_for_map_input(self):
+        while True:
+            try:
+                if self.work_state == WorkState.CLEANING:
+                    _LOGGER.debug('try to get the map')
+                    data = await asyncio.wait_for(self._get_map(), timeout=60.0)
+                    if data:
+                        _LOGGER.info('receive map {}'.format(data))
+                        json = self._extract_json(str.encode(data))
+                        if 'value' in json and 'map' in json['value']:
+                            build_map(json['value']['map'], json['value']['track'], self.map_path)
+                    await asyncio.sleep(5)
+                else:
+                    _LOGGER.debug('do not get the map. The vacuum is not cleaning. Waiting 30 seconds')
+                    await asyncio.sleep(30)
+            except ConnectionResetError:
+                await asyncio.sleep(60) 
+            except asyncio.TimeoutError:
+                _LOGGER.error('unable to get map on time')
+
     async def verify_vacuum_online(self):
         try:
+            _LOGGER.debug('verify vacuum online')
             await self._send_command(b'{"transitCmd":"131"}')
             if self.work_state == WorkState.POWER_OFF or self.work_state == WorkState.OTHER_POWER_OFF:
                 self.work_state = WorkState.PENDING
         except VacuumUnavailable:
+            _LOGGER.debug('the vacuum is unavailable')
             self.work_state = WorkState.POWER_OFF 
             self._call_listners()
 

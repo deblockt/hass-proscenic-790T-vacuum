@@ -6,6 +6,7 @@ It allow home assistant to:
 - pause cleaning
 - go to dock
 - retrieve vacuum informations (battery, state)
+- show the cleaning map
 
 ![screenshot](./doc/screen.png)
 
@@ -47,6 +48,34 @@ deviceId, token and userId can be retrieved using the Proscenic robotic applicat
     2. click on the line `<your_vacuum_ip>:8888`
     3. get you informations ![screenshot](./doc/packet_with_info.jpg)
 5. you can add your vacuum on lovelace ui entities
+    1. You can simply add it as an entity
+    2. You can use the [vacuum-card](https://github.com/denysdovhan/vacuum-card)
+
+## Cleaning map management
+
+The vacuum cleaning map can be displayed on lovelace-ui.
+
+![map](./doc/map.png)
+
+to work you should add a camera entity.
+
+``` yaml
+camera:
+  - platform: local_file 
+    name: vacuum_map
+    file_path: "/tmp/proscenic_vacuum_map.svg"
+```
+
+You can use this camera on lovelace to show the map.
+
+The default path to generate the map is `/tmp/proscenic_vacuum_map.svg`. You can define another using this configuration :
+
+``` yaml
+vacuum:
+  - platform: proscenic
+    map_path: "your_custome_map_path"
+```
+
 
 ## Know issue
 

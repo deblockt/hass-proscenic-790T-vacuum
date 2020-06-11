@@ -7,5 +7,7 @@
     "codeowners": [
         "deblockt"
     ],
-    "requirements": []
+    "requirements": [
+        "drawSvg==1.6.0"
+    ]
 }

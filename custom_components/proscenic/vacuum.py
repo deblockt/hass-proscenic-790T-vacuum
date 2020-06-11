@@ -50,6 +50,7 @@ CONF_TOKEN = 'token'
 CONF_USER_ID = 'userId'
 CONF_SLEEP = 'sleep_duration_on_exit'
 CONF_AUTH_CODE = 'authCode'
+CONF_MAP_PATH='map_path'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -58,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USER_ID): cv.string,
     vol.Required(CONF_AUTH_CODE): cv.string,
     vol.Optional(CONF_SLEEP, default = 60): int,
+    vol.Optional(CONF_MAP_PATH, default = '/tmp/proscenic_vacuum_map.svg'): cv.string,
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -67,8 +69,8 @@ WORK_STATE_TO_STATE = {
     WorkState.PENDING: STATE_IDLE,
     WorkState.UNKNONW3: STATE_ERROR,
     WorkState.NEAR_BASE: STATE_DOCKED,
-    WorkState.POWER_OFF: STATE_PAUSED,
-    WorkState.OTHER_POWER_OFF: STATE_PAUSED,
+    WorkState.POWER_OFF: 'off',
+    WorkState.OTHER_POWER_OFF: 'off',
     WorkState.CHARGING: STATE_DOCKED,
     None: STATE_ERROR
 }
@@ -86,9 +88,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_AUTH_CODE: config[CONF_AUTH_CODE]
     }
     name = config[CONF_NAME] if CONF_NAME in config else '790T vacuum'
-    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP]})
+    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP], CONF_MAP_PATH: config[CONF_MAP_PATH]})
     vacuums = [ProscenicVacuum(device, name)]
     hass.loop.create_task(device.listen_state_change())
+    hass.loop.create_task(device.start_map_generation())
     
     _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, update_before_add = False)
