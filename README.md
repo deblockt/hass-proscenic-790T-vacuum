@@ -53,9 +53,11 @@ deviceId, token and userId can be retrieved using the Proscenic robotic applicat
 
 ## Cleaning map management
 
-The vacuum cleaning map can be displayed on lovelace-ui.
-
 ![map](./doc/map.png)
+
+### Configuration
+
+The vacuum cleaning map can be displayed on lovelace-ui (it will be displayed only after the first vacuum clean process).
 
 to work you should add a camera entity.
 
@@ -76,6 +78,28 @@ vacuum:
     map_path: "your_custome_map_path"
 ```
 
+### Add to lovelace
+
+ To display the camera on lovelace, you can :
+- use the [vacuum-card](https://github.com/denysdovhan/vacuum-card) configure the card using code editor and add map property `map: camera.vacuum_map`.
+``` yaml
+entity: vacuum.my_vacuum
+image: default
+map: camera.vacuum_map
+type: 'custom:vacuum-card'
+```
+
+- or use a card of type `picture-entity` 
+``` yaml
+type: picture-entity
+entity: vacuum.my_vacuum
+camera_image: camera.vacuum_map
+aspect_ratio: 100%
+show_state: true
+show_name: true
+tap_action:
+  action: more-info
+```
 
 ## Know issue
 
