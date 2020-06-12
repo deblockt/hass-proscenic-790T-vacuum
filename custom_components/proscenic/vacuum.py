@@ -192,6 +192,10 @@ class ProscenicVacuum(VacuumEntity):
         """Stop the vacuum cleaner."""
         await self.device.stop()
 
+    async def async_pause(self, **kwargs):
+        """Pause the vacuum cleaning process."""
+        await self.device.stop()
+
     @property
     def device_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
