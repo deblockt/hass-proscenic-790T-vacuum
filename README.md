@@ -103,6 +103,16 @@ tap_action:
   action: more-info
 ```
 
+
+
+## Available attributes
+
+Theses attributes are available to be displayed on lovelace-ui:
+- `clear_area`: number of m2 cleaned
+- `clear_duration`: last clean duration in second
+- `error_code`: the current error code, if vacuum is on error status
+- `error_detail`: the current error message (in english), if vacuum is on error status
+
 ## Know issue
 
 - At home assistant startup the vacuum cleaner status is not retrieved. You should perform an action on home assistant to get the vacuum cleaner status. 
