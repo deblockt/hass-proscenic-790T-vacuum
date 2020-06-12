@@ -175,7 +175,7 @@ class ProscenicVacuum(VacuumEntity):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return [1, 2]
+        return []
 
     async def async_turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
@@ -195,4 +195,7 @@ class ProscenicVacuum(VacuumEntity):
     @property
     def device_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
-        return {}
+        return {
+            'clear_area': self.device.last_clear_area,
+            'clear_duration': (self.device.last_clear_duration // 60)
+        }
