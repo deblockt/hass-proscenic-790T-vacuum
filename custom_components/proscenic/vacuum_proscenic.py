@@ -23,6 +23,8 @@ class Vacuum():
         self.battery = None
         self.fan_speed = 2
         self.work_state = WorkState.CHARGING
+        self.last_clear_area = None
+        self.last_clear_duration = None
         self.listner = []
         self.loop = loop
         self.auth = auth
@@ -160,8 +162,15 @@ class Vacuum():
                     if data:
                         _LOGGER.info('receive map {}'.format(data))
                         json = self._extract_json(str.encode(data))
-                        if 'value' in json and 'map' in json['value']:
-                            build_map(json['value']['map'], json['value']['track'], self.map_path)
+                        if 'value' in json:
+                            value = json['value']
+                            if 'map' in value:
+                                build_map(value['map'], value['track'], self.map_path)
+                            if 'clearArea' in value:
+                                self.last_clear_area = int(value['clearArea'])
+                            if 'clearTime' in value:
+                                self.last_clear_duration = int(value['clearTime'])
+                            self._call_listners()
                     await asyncio.sleep(5)
                 else:
                     _LOGGER.debug('do not get the map. The vacuum is not cleaning. Waiting 30 seconds')
