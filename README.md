@@ -1,6 +1,8 @@
 # Home assistant proscenic 790T vacuum integration
 
-the purpose of this integration is to provide an integration of proscenic 790T vacuum. 
+[![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/deblockt)
+
+The purpose of this integration is to provide an integration of proscenic 790T vacuum. 
 It allow home assistant to:
 - start cleaning
 - pause cleaning
