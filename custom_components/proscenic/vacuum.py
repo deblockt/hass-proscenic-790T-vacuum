@@ -68,6 +68,7 @@ WORK_STATE_TO_STATE = {
     WorkState.CLEANING: STATE_CLEANING,
     WorkState.PENDING: STATE_IDLE,
     WorkState.UNKNONW3: STATE_ERROR,
+    WorkState.ERROR: STATE_ERROR,
     WorkState.NEAR_BASE: STATE_DOCKED,
     WorkState.POWER_OFF: 'off',
     WorkState.OTHER_POWER_OFF: 'off',
@@ -201,5 +202,7 @@ class ProscenicVacuum(VacuumEntity):
         """Return the device-specific state attributes of this vacuum."""
         return {
             'clear_area': self.device.last_clear_area,
-            'clear_duration': None if not self.device.last_clear_duration else (self.device.last_clear_duration // 60)
+            'clear_duration': None if not self.device.last_clear_duration else (self.device.last_clear_duration // 60),
+            'error_code': self.device.error_code,
+            'error_detail': self.device.error_detail
         }

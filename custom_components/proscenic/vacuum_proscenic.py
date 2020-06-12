@@ -15,6 +15,12 @@ class WorkState(Enum):
     CHARGING = 6
     POWER_OFF = 7
     OTHER_POWER_OFF = 0
+    ERROR = 1111111
+
+ERROR_CODES = {
+    '14': 'the left wheel is suspended',
+    '13': 'the right wheel is suspended'
+}
 
 class Vacuum():
 
@@ -22,6 +28,8 @@ class Vacuum():
         self.ip = ip
         self.battery = None
         self.fan_speed = 2
+        self.error_code = None
+        self.error_detail = None
         self.work_state = WorkState.CHARGING
         self.last_clear_area = None
         self.last_clear_duration = None
@@ -113,10 +121,18 @@ class Vacuum():
                 elif data and 'value' in data:
                     values = data['value']
                     if 'workState' in values  and values['workState'] != '':
-                        try:
-                            self.work_state = WorkState(int(values['workState']))
-                        except:
-                            logging.exception('error setting work state {}'.format(str(values['workState'])))
+                        if 'error' in values and values['error'] != '' and values['error'] != '0':
+                            self.error_code = values['error']
+                            self.error_detail = ERROR_CODES[self.error_code] if self.error_code in ERROR_CODES else None
+                            self.work_state = WorkState.ERROR
+                        else:
+                            try:
+                                self.work_state = WorkState(int(values['workState']))
+                            except:
+                                logging.exception('error setting work state {}'.format(str(values['workState'])))
+                    if self.work_state != WorkState.ERROR:
+                        self.error_code = None
+                        self.error_detail = None
                     if self.work_state != WorkState.POWER_OFF:
                         if 'battery' in values and values['battery'] != '':
                             self.battery = int(values['battery'])
