@@ -19,7 +19,8 @@ class WorkState(Enum):
 
 ERROR_CODES = {
     '14': 'the left wheel is suspended',
-    '13': 'the right wheel is suspended'
+    '13': 'the right wheel is suspended',
+    '3': 'Power switch is not switched on during charging'
 }
 
 class Vacuum():
