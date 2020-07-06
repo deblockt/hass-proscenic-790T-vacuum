@@ -5,7 +5,7 @@
     "issue_tracker": "https://github.com/deblockt/hass-proscenic-790T-vacuum/issues",
     "dependencies": [],
     "codeowners": [
-        "deblockt"
+        "@deblockt"
     ],
     "requirements": [
         "svgwrite==1.4"
