@@ -37,6 +37,7 @@ class Vacuum():
         self.listner = []
         self.loop = loop
         self.auth = auth
+        self.targetId = auth['targetId']
         self.device_id = auth['deviceId']
         self.sleep_duration_on_exit = config['sleep_duration_on_exit'] if 'sleep_duration_on_exit' in config  else 60
         self.map_path = config['map_path'] if 'map_path' in config  else '/tmp/map.svg'
@@ -71,18 +72,21 @@ class Vacuum():
     async def _send_command(self, command: bytes, input_writer = None):
         try:
             if not input_writer:
-                (_, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
+                (_, writer) = await asyncio.open_connection('47.91.67.181', 20008, loop = self.loop)
             else:
                 writer = input_writer
             
-            header = b'\xd2\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\xeb\x27\xea\x27\x00\x00\x00\x00\x00\x00'
+            await self._login(writer)
+            await asyncio.sleep(5)
+
+            header = b'\xd0\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\x24\x27\x25\x27\x00\x00\x00\x00\x00\x00'
             body = b'{"cmd":0,"control":{"authCode":"' \
                 + str.encode(self.auth['authCode']) \
                 + b'","deviceIp":"' \
                 + str.encode(self.ip) \
                 + b'","devicePort":"8888","targetId":"' \
-                + str.encode(self.auth['deviceId']) \
-                + b'","targetType":"3"},"seq":0,"value":' \
+                + str.encode(self.auth['targetId']) \
+                + b'","targetType":"1"},"seq":0,"value":' \
                 + command  \
                 + b',"version":"1.5.11"}'
             _LOGGER.debug('send command {}'.format(str(body)))
