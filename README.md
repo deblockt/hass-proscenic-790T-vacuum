@@ -1,4 +1,6 @@
-# Home assistant proscenic 790T vacuum integration
+# Home assistant proscenic 800T vacuum integration
+
+THE DESCRIPTION BELOW IS OUTDATED (it refers to the 790T model)
 
 [![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/deblockt)
 
