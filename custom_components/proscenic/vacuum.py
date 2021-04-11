@@ -79,7 +79,6 @@ WORK_STATE_TO_STATE = {
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the 790T vacuums."""
     auth = {
@@ -96,7 +95,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     
     _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, update_before_add = False)
-
 
 class ProscenicVacuum(VacuumEntity):
     """790T Vacuums such as Deebot."""
