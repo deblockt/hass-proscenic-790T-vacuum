@@ -1,6 +1,7 @@
 {
     "name": "proscenic 790T vacuum",
     "domains": ["vacuum"],
-    "homeassistant": "0.109.6",
-    "iot_class": ""
+    "homeassistant": "2021.7.4",
+    "iot_class": "local_polling",
+    "render_readme": true
   }

@@ -4,7 +4,7 @@
         "step": {
             "user": {
                 "title": "Configuration de l'aspirateur proscenic",
-                "description": "Pour récupérer les information de connexion merci de lire la [notice d'installation](https://github.com/deblockt/hass-proscenic-790T-vacuum#configuration).",
+                "description": "Pour récupérer les information de connexion merci de lire la [notice d'installation](https://github.com/deblockt/hass-proscenic-790T-vacuum#get-authentifications-data).",
                 "data": {
                     "host": "Address Ip de l'aspirateur",
                     "deviceId": "id de l'aspirateur",
