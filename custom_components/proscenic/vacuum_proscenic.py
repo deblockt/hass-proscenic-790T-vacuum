@@ -4,6 +4,8 @@ from enum import Enum
 import logging
 from .vacuum_map_generator import build_map
 
+from .const import CONF_DEVICE_ID, CONF_AUTH_CODE, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_MAP_PATH, DEFAULT_CONF_MAP_PATH, DEFAULT_CONF_SLEEP
+
 _LOGGER = logging.getLogger(__name__)
 
 class WorkState(Enum):
@@ -37,9 +39,9 @@ class Vacuum():
         self.listner = []
         self.loop = loop
         self.auth = auth
-        self.device_id = auth['deviceId']
-        self.sleep_duration_on_exit = config['sleep_duration_on_exit'] if 'sleep_duration_on_exit' in config  else 60
-        self.map_path = config['map_path'] if 'map_path' in config  else '/tmp/map.svg'
+        self.device_id = auth[CONF_DEVICE_ID]
+        self.sleep_duration_on_exit = config[CONF_SLEEP] if CONF_SLEEP in config else DEFAULT_CONF_SLEEP
+        self.map_path = config[CONF_MAP_PATH] if CONF_MAP_PATH in config  else DEFAULT_CONF_MAP_PATH
 
     async def start_map_generation(self):
         while True:
@@ -47,7 +49,7 @@ class Vacuum():
                 await self._wait_for_map_input()
             except:
                 _LOGGER.debug('can not contact the vacuum. Wait 60 second before retry. (maybe that the vacuum switch is off)')
-                await asyncio.sleep(60)
+                await asyncio.sleep(self.sleep_duration_on_exit)
                 pass
 
     async def listen_state_change(self):
@@ -74,14 +76,14 @@ class Vacuum():
                 (_, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
             else:
                 writer = input_writer
-            
+
             header = b'\xd2\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\xeb\x27\xea\x27\x00\x00\x00\x00\x00\x00'
             body = b'{"cmd":0,"control":{"authCode":"' \
-                + str.encode(self.auth['authCode']) \
+                + str.encode(self.auth[CONF_AUTH_CODE]) \
                 + b'","deviceIp":"' \
                 + str.encode(self.ip) \
                 + b'","devicePort":"8888","targetId":"' \
-                + str.encode(self.auth['deviceId']) \
+                + str.encode(self.auth[CONF_DEVICE_ID]) \
                 + b'","targetType":"3"},"seq":0,"value":' \
                 + command  \
                 + b',"version":"1.5.11"}'
@@ -100,11 +102,11 @@ class Vacuum():
     async def _login(self, writer):
         header = b'\xfb\x00\x00\x00\x10\x00\xc8\x00\x00\x00\x29\x27\x2a\x27\x00\x00\x00\x00\x00\x00'
         body = b'{"cmd":0,"control":{"targetId":""},"seq":0,"value":{"appKey":"67ce4fabe562405d9492cad9097e09bf","deviceId":"' \
-            + str.encode(self.auth['deviceId']) \
+            + str.encode(self.auth[CONF_DEVICE_ID]) \
             + b'","deviceType":"3","token":"' \
-            + str.encode(self.auth['token']) \
+            + str.encode(self.auth[CONF_TOKEN]) \
             + b'","userId":"' \
-            + str.encode(self.auth['userId']) \
+            + str.encode(self.auth[CONF_USER_ID]) \
             + b'"}}'
         writer.write(header + body)
         await writer.drain()
@@ -139,7 +141,7 @@ class Vacuum():
                             self.battery = int(values['battery'])
                         if 'fan' in values  and values['fan'] != '':
                             self.fan_speed = int(values['fan'])
-                   
+
                     self._call_listners()
             else:
                 _LOGGER.warn('receive empty message - I have been disconnected')
@@ -193,7 +195,7 @@ class Vacuum():
                     _LOGGER.debug('do not get the map. The vacuum is not cleaning. Waiting 30 seconds')
                     await asyncio.sleep(30)
             except ConnectionResetError:
-                await asyncio.sleep(60) 
+                await asyncio.sleep(60)
             except asyncio.TimeoutError:
                 _LOGGER.error('unable to get map on time')
 
@@ -205,7 +207,7 @@ class Vacuum():
                 self.work_state = WorkState.PENDING
         except VacuumUnavailable:
             _LOGGER.debug('the vacuum is unavailable')
-            self.work_state = WorkState.POWER_OFF 
+            self.work_state = WorkState.POWER_OFF
             self._call_listners()
 
     async def _refresh_loop(self):

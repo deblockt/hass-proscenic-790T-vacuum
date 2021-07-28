@@ -1,0 +1,30 @@
+{
+    "config": {
+        "title": "Proscenic vacuum",
+        "step": {
+            "user": {
+                "title": "Vacuum proscenic configuration",
+                "description": "To get connection informations read the [user guide](https://github.com/deblockt/hass-proscenic-790T-vacuum#configuration)",
+                "data": {
+                    "host": "host of the vacuum",
+                    "deviceId": "device id",
+                    "token": "authentication token",
+                    "userId": "user id",
+                    "authCode": "authentication code"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Vacuum proscenic options",
+                "description": "You should restart home assistant to take this options on account.",
+                "data": {
+                    "sleep_duration_on_exit": "duration to reconnect to vacuum when offline",
+                    "map_path": "path the save vacuum map"
+                }
+            }
+        }
+    }
+}

@@ -33,6 +33,8 @@ from .vacuum_proscenic import Vacuum, WorkState
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN, CONF_DEVICE_ID, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_AUTH_CODE, CONF_MAP_PATH, DEFAULT_CONF_SLEEP, DEFAULT_CONF_MAP_PATH
+
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PROSCENIC = (
@@ -45,21 +47,14 @@ SUPPORT_PROSCENIC = (
     # | SUPPORT_LOCATE
 )
 
-CONF_DEVICE_ID = 'deviceId'
-CONF_TOKEN = 'token'
-CONF_USER_ID = 'userId'
-CONF_SLEEP = 'sleep_duration_on_exit'
-CONF_AUTH_CODE = 'authCode'
-CONF_MAP_PATH='map_path'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_USER_ID): cv.string,
     vol.Required(CONF_AUTH_CODE): cv.string,
-    vol.Optional(CONF_SLEEP, default = 60): int,
-    vol.Optional(CONF_MAP_PATH, default = '/tmp/proscenic_vacuum_map.svg'): cv.string,
+    vol.Optional(CONF_SLEEP, default = DEFAULT_CONF_SLEEP): int,
+    vol.Optional(CONF_MAP_PATH, default = DEFAULT_CONF_MAP_PATH): cv.string,
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -76,12 +71,33 @@ WORK_STATE_TO_STATE = {
     None: STATE_ERROR
 }
 
-ATTR_ERROR = "error"
-ATTR_COMPONENT_PREFIX = "component_"
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Test"""
+    _LOGGER.info("setup entry " + str(hass.data[DOMAIN][config_entry.entry_id]))
+    config = hass.data[DOMAIN][config_entry.entry_id]
+    conf_sleep = config[CONF_SLEEP] if CONF_SLEEP in config else DEFAULT_CONF_SLEEP
+    conf_map_path = config[CONF_MAP_PATH] if CONF_MAP_PATH in config else DEFAULT_CONF_MAP_PATH
+
+    auth = {
+        CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+        CONF_TOKEN: config[CONF_TOKEN],
+        CONF_USER_ID: config[CONF_USER_ID],
+        CONF_AUTH_CODE: config[CONF_AUTH_CODE]
+    }
+
+    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop, config = {CONF_SLEEP: conf_sleep, CONF_MAP_PATH: conf_map_path})
+    vacuums = [ProscenicVacuum(device, config[CONF_DEVICE_ID])]
+    hass.loop.create_task(device.listen_state_change())
+    hass.loop.create_task(device.start_map_generation())
+
+    _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
+    async_add_entities(vacuums, update_before_add = False)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the 790T vacuums."""
+    _LOGGER.info("setup platform ")
+    _LOGGER.warn("Proscenic vacuum integration yaml configuration is now deprecated. You should configure the integration using the UI.")
     auth = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         CONF_TOKEN: config[CONF_TOKEN],
@@ -93,7 +109,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     vacuums = [ProscenicVacuum(device, name)]
     hass.loop.create_task(device.listen_state_change())
     hass.loop.create_task(device.start_map_generation())
-    
     _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, update_before_add = False)
 
@@ -121,6 +136,11 @@ class ProscenicVacuum(VacuumEntity):
     def unique_id(self) -> str:
         """Return an unique ID."""
         return self.device.device_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {"identifiers": {(DOMAIN, self.device.device_id)}}
 
     @property
     def is_on(self):
