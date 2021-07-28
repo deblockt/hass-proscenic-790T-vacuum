@@ -1,0 +1,30 @@
+{
+    "config": {
+        "title": "Aspirateur proscenic",
+        "step": {
+            "user": {
+                "title": "Configuration de l'aspirateur proscenic",
+                "description": "Pour récupérer les information de connexion merci de lire la [notice d'installation](https://github.com/deblockt/hass-proscenic-790T-vacuum#configuration).",
+                "data": {
+                    "host": "Address Ip de l'aspirateur",
+                    "deviceId": "id de l'aspirateur",
+                    "token": "token d'authentification",
+                    "userId": "id d'utilisateur",
+                    "authCode": "code d'authentification"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Options de l'aspirateur proscenic",
+                "description": "Vous devez redémarrer home assistant pour prendre ces options en compte.",
+                "data": {
+                    "sleep_duration_on_exit": "durée avant reconnexion à l'aspiration quand il est eteind",
+                    "map_path": "chemin du fichier pour sauvegarder la carte"
+                }
+            }
+        }
+    }
+}
