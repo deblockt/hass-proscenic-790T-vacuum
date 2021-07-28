@@ -4,7 +4,7 @@
         "step": {
             "user": {
                 "title": "Vacuum proscenic configuration",
-                "description": "To get connection informations read the [user guide](https://github.com/deblockt/hass-proscenic-790T-vacuum#configuration)",
+                "description": "To get connection informations read the [user guide](https://github.com/deblockt/hass-proscenic-790T-vacuum#get-authentifications-data)",
                 "data": {
                     "host": "host of the vacuum",
                     "deviceId": "device id",
