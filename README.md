@@ -1,8 +1,9 @@
 # Home assistant proscenic 790T vacuum integration
 
-[![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/deblockt)
+[![GitHub release](https://img.shields.io/github/release/deblockt/hass-proscenic-790T-vacuum)](https://github.com/deblockt/hass-proscenic-790T-vacuum/releases/latest)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 
-The purpose of this integration is to provide an integration of proscenic 790T vacuum. 
+The purpose of this integration is to provide an integration of proscenic 790T vacuum.
 It allow home assistant to:
 - start cleaning
 - pause cleaning
@@ -16,7 +17,7 @@ It allow home assistant to:
 
 ### HACS installation
 
-TODO
+You can use [HACS](https://hacs.xyz/) to install this component. Search for the Integration "proscenic 790T vacuum"
 
 ### Manual installation
 
@@ -27,31 +28,26 @@ TODO
 
 ## Configuration
 
-To add your vacuum on home assistant, you should add this: 
+Add your device via the Integration menu.
 
-``` yaml
-vacuum:
-  - platform: proscenic
-    host: "<vacuum-ip>"
-    deviceId: ""
-    token: ""
-    authCode: ""
-    userId: ""
-    name: ""
-    sleep_duration_on_exit: # default 60. number of second waiting before reconnection (if you use proscenic app)
-```
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=proscenic)
 
-deviceId, token and userId can be retrieved using the Proscenic robotic application :
-1. On your smartphone, install [Packet capture](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=fr)
+### Get authentifications data
+
+device id, token, user id and authentication code can be retrieved using the Proscenic robotic application :
+1. On your android smartphone (no solution for iphone), install [Packet capture](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture&hl=fr)
 2. Open Packet capture and start a capture ![screenshot](./doc/packet_capture_button.png) select Proscenic  Robotic app
 3. Open the proscenic application, and open the vacuum view
-4. Reopen  Packet capture 
-    1. click on the first line
-    2. click on the line `<your_vacuum_ip>:8888`
-    3. get you informations ![screenshot](./doc/packet_with_info.jpg)
-5. you can add your vacuum on lovelace ui entities
+4. Reopen  Packet capture
+    1. Click on the first line
+    2. Click on the line `<your_vacuum_ip>:8888`
+    3. Get you informations ![screenshot](./doc/packet_with_info.jpg)
+5. You can now enter your informations on home assistant
+6. you can add your vacuum on lovelace ui entities
     1. You can simply add it as an entity
     2. You can use the [vacuum-card](https://github.com/denysdovhan/vacuum-card)
+
+> **Note**:  YAML configuration is deprecated. This will be removed soon.
 
 ## Cleaning map management
 
@@ -65,45 +61,14 @@ to work you should add a camera entity.
 
 ``` yaml
 camera:
-  - platform: local_file 
+  - platform: local_file
     name: vacuum_map
     file_path: "/tmp/proscenic_vacuum_map.svg"
 ```
 
 You can use this camera on lovelace to show the map.
 
-The default path to generate the map is `/tmp/proscenic_vacuum_map.svg`. You can define another using this configuration :
-
-``` yaml
-vacuum:
-  - platform: proscenic
-    map_path: "your_custome_map_path"
-```
-
-### Add to lovelace
-
- To display the camera on lovelace, you can :
-- use the [vacuum-card](https://github.com/denysdovhan/vacuum-card) configure the card using code editor and add map property `map: camera.vacuum_map`.
-``` yaml
-entity: vacuum.my_vacuum
-image: default
-map: camera.vacuum_map
-type: 'custom:vacuum-card'
-```
-
-- or use a card of type `picture-entity` 
-``` yaml
-type: picture-entity
-entity: vacuum.my_vacuum
-camera_image: camera.vacuum_map
-aspect_ratio: 100%
-show_state: true
-show_name: true
-tap_action:
-  action: more-info
-```
-
-
+The default path to generate the map is `/tmp/proscenic_vacuum_map.svg`. You can define another using the option on Integration menu.
 
 ## Available attributes
 
@@ -115,6 +80,8 @@ Theses attributes are available to be displayed on lovelace-ui:
 
 ## Know issue
 
-- At home assistant startup the vacuum cleaner status is not retrieved. You should perform an action on home assistant to get the vacuum cleaner status. 
+- At home assistant startup the vacuum cleaner status is not retrieved. You should perform an action on home assistant to get the vacuum cleaner status.
 - If you start the proscenic application, the status of the vacuum cleaner will not be refreshed on home assistant for 60 seconds.
 - If you start the proscenic application, you will be disconnected 60 seconds later. You can configure this time using `sleep_duration_on_exit` configuration.
+
+[![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/deblockt)
