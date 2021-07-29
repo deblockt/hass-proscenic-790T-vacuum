@@ -53,22 +53,9 @@ device id, token, user id and authentication code can be retrieved using the Pro
 
 ![map](./doc/map.png)
 
-### Configuration
-
-The vacuum cleaning map can be displayed on lovelace-ui (it will be displayed only after the first vacuum clean process).
-
-to work you should add a camera entity.
-
-``` yaml
-camera:
-  - platform: local_file
-    name: vacuum_map
-    file_path: "/tmp/proscenic_vacuum_map.svg"
-```
-
-You can use this camera on lovelace to show the map.
-
-The default path to generate the map is `/tmp/proscenic_vacuum_map.svg`. You can define another using the option on Integration menu.
+The camera entity will be automaticaly added.
+The map is stored on your file system, the path is `/tmp/proscenic_vacuum_map.svg`.
+The path can be updated on the integration options.
 
 ## Available attributes
 
