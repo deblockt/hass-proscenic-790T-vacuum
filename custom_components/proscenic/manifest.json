@@ -1,7 +1,7 @@
 {
     "domain": "proscenic",
     "name": "proscenic-vacuum",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "documentation": "https://github.com/deblockt/hass-proscenic-790T-vacuum",
     "issue_tracker": "https://github.com/deblockt/hass-proscenic-790T-vacuum/issues",
     "dependencies": [
