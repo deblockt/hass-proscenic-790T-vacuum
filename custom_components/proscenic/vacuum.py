@@ -72,8 +72,7 @@ WORK_STATE_TO_STATE = {
 }
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Test"""
-    _LOGGER.info("setup entry " + str(hass.data[DOMAIN][config_entry.entry_id]))
+    """Set up the 790T vacuums."""
     config = hass.data[DOMAIN][config_entry.entry_id]
     conf_sleep = config[CONF_SLEEP] if CONF_SLEEP in config else DEFAULT_CONF_SLEEP
     conf_map_path = config[CONF_MAP_PATH] if CONF_MAP_PATH in config else DEFAULT_CONF_MAP_PATH
@@ -96,7 +95,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the 790T vacuums."""
-    _LOGGER.info("setup platform ")
     _LOGGER.warn("Proscenic vacuum integration yaml configuration is now deprecated. You should configure the integration using the UI.")
     auth = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
@@ -135,12 +133,16 @@ class ProscenicVacuum(VacuumEntity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.device.device_id
+        return "vacuum" + self.device.device_id
 
     @property
     def device_info(self):
         """Return the device info."""
-        return {"identifiers": {(DOMAIN, self.device.device_id)}}
+        return {
+            "identifiers": {(DOMAIN, self.device.device_id)},
+            "name": "Proscenic vacuum",
+            "manufacturer": "Proscenic"
+        }
 
     @property
     def is_on(self):
