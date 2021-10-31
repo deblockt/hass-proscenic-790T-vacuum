@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    branches:
+      - master
+    inputs:
+      version:
+        description: 'the new version number'
+        required: true
+
+jobs:
+  release:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v2"
+      - name: "update version number"
+        run: cat <<< $(jq '.version = "${{ github.event.inputs.version }}"' custom_components/proscenic/manifest.json) > custom_components/proscenic/manifest.json
+      - name: "commit version update"
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "ci: upgrade version to ${{ github.event.inputs.version }}"
+      - name: "zip custom_component"
+        run: cd custom_components/proscenic; zip -r ../../proscenic.zip *
+      - name: release
+        uses: ncipollo/release-action@v1
+        id: create_release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.version }}
+          artifacts: proscenic.zip
+          name: version ${{ github.event.inputs.version }}
