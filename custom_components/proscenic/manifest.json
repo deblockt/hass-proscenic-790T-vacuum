@@ -1,16 +1,16 @@
 {
-    "domain": "proscenic",
-    "name": "proscenic-vacuum",
-    "version": "0.0.7",
-    "documentation": "https://github.com/deblockt/hass-proscenic-790T-vacuum",
-    "issue_tracker": "https://github.com/deblockt/hass-proscenic-790T-vacuum/issues",
-    "dependencies": [],
-    "codeowners": [
-        "@deblockt"
-    ],
-    "requirements": [
-        "svgwrite==1.4"
-    ],
-    "iot_class": "local_polling",
-    "config_flow": true
+  "domain": "proscenic",
+  "name": "proscenic-vacuum",
+  "version": "0.0.8",
+  "documentation": "https://github.com/deblockt/hass-proscenic-790T-vacuum",
+  "issue_tracker": "https://github.com/deblockt/hass-proscenic-790T-vacuum/issues",
+  "dependencies": [],
+  "codeowners": [
+    "@deblockt"
+  ],
+  "requirements": [
+    "svgwrite==1.4"
+  ],
+  "iot_class": "local_polling",
+  "config_flow": true
 }
