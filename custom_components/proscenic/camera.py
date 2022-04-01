@@ -34,7 +34,7 @@ class ProscenicMapCamera(Camera):
             with open(self._file_path, "rb") as file:
                 return file.read()
         except FileNotFoundError:
-            _LOGGER.info("Not map has been generated for the vacuum device %s", self._device_id)
+            _LOGGER.info("No map has been generated for the vacuum device %s", self._device_id)
 
         return b'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'
 

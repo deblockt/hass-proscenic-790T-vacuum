@@ -33,7 +33,7 @@ from .vacuum_proscenic import Vacuum, WorkState
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, CONF_DEVICE_ID, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_AUTH_CODE, CONF_MAP_PATH, DEFAULT_CONF_SLEEP, DEFAULT_CONF_MAP_PATH
+from .const import get_or_default, LOCAL_MODE, DOMAIN, CONF_CONNECTION_MODE, CONF_DEVICE_ID, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_AUTH_CODE, CONF_MAP_PATH, DEFAULT_CONF_SLEEP, DEFAULT_CONF_MAP_PATH, CONF_TARGET_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,13 +81,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         CONF_TOKEN: config[CONF_TOKEN],
         CONF_USER_ID: config[CONF_USER_ID],
-        CONF_AUTH_CODE: config[CONF_AUTH_CODE]
+        CONF_AUTH_CODE: config[CONF_AUTH_CODE],
+        CONF_TARGET_ID: get_or_default(config, CONF_TARGET_ID, config[CONF_DEVICE_ID])
     }
 
-    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop, config = {CONF_SLEEP: conf_sleep, CONF_MAP_PATH: conf_map_path})
+    ip = get_or_default(config, CONF_HOST, None)
+    mode = get_or_default(config, CONF_CONNECTION_MODE, LOCAL_MODE)
+    device = Vacuum(auth, ip, mode, loop = hass.loop, config = {CONF_SLEEP: conf_sleep, CONF_MAP_PATH: conf_map_path})
     vacuums = [ProscenicVacuum(device, config[CONF_DEVICE_ID])]
     hass.loop.create_task(device.listen_state_change())
-    hass.loop.create_task(device.start_map_generation())
 
     _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, update_before_add = False)
@@ -100,10 +102,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         CONF_TOKEN: config[CONF_TOKEN],
         CONF_USER_ID: config[CONF_USER_ID],
-        CONF_AUTH_CODE: config[CONF_AUTH_CODE]
+        CONF_AUTH_CODE: config[CONF_AUTH_CODE],
+        CONF_TARGET_ID: config[CONF_TARGET_ID] if CONF_TARGET_ID in config else config[CONF_DEVICE_ID]
     }
     name = config[CONF_NAME] if CONF_NAME in config else '790T vacuum'
-    device = Vacuum(config[CONF_HOST], auth, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP], CONF_MAP_PATH: config[CONF_MAP_PATH]})
+    ip = config[CONF_HOST] if CONF_HOST in config else None
+    device = Vacuum(auth, ip, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP], CONF_MAP_PATH: config[CONF_MAP_PATH]})
     vacuums = [ProscenicVacuum(device, name)]
     hass.loop.create_task(device.listen_state_change())
     hass.loop.create_task(device.start_map_generation())
@@ -115,9 +119,8 @@ class ProscenicVacuum(VacuumEntity):
     """790T Vacuums such as Deebot."""
 
     def __init__(self, device, name):
-        """Initialize the Ecovacs Vacuum."""
+        """Initialize the Proscenic Vacuum."""
         self.device = device
-        self.device.subcribe(lambda vacuum: self.schedule_update_ha_state(force_refresh = False))
         self.device.subcribe(lambda vacuum: self.schedule_update_ha_state(force_refresh = False))
         self._name = name
         self._fan_speed = None

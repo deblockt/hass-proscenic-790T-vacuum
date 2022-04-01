@@ -71,6 +71,9 @@ def build_map(m, track, file_path):
     inp = base64.b64decode(track)
     path = struct.unpack('<' + 'b'*(len(inp)-4), inp[4:])
 
+    if len(wallx) == 0 or len(wally) == 0:
+        return
+
     min_x=min(wallx)
     min_y=min(wally)
     map_width=(max(wallx) - min_x) * cell_size
@@ -84,7 +87,7 @@ def build_map(m, track, file_path):
         map_height = min_image_height
 
     dwg = svgwrite.Drawing(file_path, size=(map_width, map_height))
-    
+
     for i in range(len(wallx)):
         dwg.add(dwg.rect(insert=((wallx[i] - min_x) * cell_size, map_height - ((wally[i] - min_y) * cell_size)), size=(cell_size, cell_size), fill='#000000', fill_opacity=0.7))
 
@@ -98,7 +101,7 @@ def build_map(m, track, file_path):
 
     for i in range(len(draw_path) // 2):
         dwg_path.push('L{},{}'.format(draw_path[2*i], draw_path[2*i+1]))
-    
+
     dwg.add(dwg_path)
     dwg.save()
 

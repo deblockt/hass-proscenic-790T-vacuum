@@ -2,15 +2,23 @@
     "config": {
         "title": "Proscenic vacuum",
         "step": {
-            "user": {
+            "config_connection_info": {
                 "title": "Vacuum proscenic configuration",
                 "description": "To get connection informations read the [user guide](https://github.com/deblockt/hass-proscenic-790T-vacuum#get-authentifications-data)",
                 "data": {
                     "host": "host of the vacuum",
                     "deviceId": "device id",
+                    "targetId": "target id",
                     "token": "authentication token",
                     "userId": "user id",
                     "authCode": "authentication code"
+                }
+            },
+            "config_mode_selection": {
+                "title": "Vacuum proscenic configuration - connection mode",
+                "description": "The vacuum connection can be \"local\" or use de proscenic \"cloud\". Some vacuum can work only with the cloud mode.",
+                "data": {
+                    "connection_mode": "connection mode"
                 }
             }
         }
