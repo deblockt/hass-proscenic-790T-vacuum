@@ -2,15 +2,23 @@
     "config": {
         "title": "Aspirateur proscenic",
         "step": {
-            "user": {
+            "config_connection_info": {
                 "title": "Configuration de l'aspirateur proscenic",
                 "description": "Pour récupérer les information de connexion merci de lire la [notice d'installation](https://github.com/deblockt/hass-proscenic-790T-vacuum#get-authentifications-data).",
                 "data": {
                     "host": "Address Ip de l'aspirateur",
                     "deviceId": "id de l'aspirateur",
+                    "targetId": "id de cible de l'aspirateur",
                     "token": "token d'authentification",
                     "userId": "id d'utilisateur",
                     "authCode": "code d'authentification"
+                }
+            },
+            "config_mode_selection": {
+                "title": "Configuration de l'aspirateur proscenic - mode de connexion",
+                "description": "La connexion avec l'aspirateur peut être \"local\" ou via le \"cloud\" proscenic. Certains aspirateurs ne peuvent communiquer que via le cloud.",
+                "data": {
+                    "connection_mode": "mode de connexion"
                 }
             }
         }
