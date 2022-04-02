@@ -32,6 +32,13 @@ Add your device via the Integration menu.
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=proscenic)
 
+You can choose between two connection mode:
+- *local*: the integration will use your local network to contact your vacuum (send command to start/stop). But the cloud will be used to get vacuum status.
+- *cloud*: All interactions are done using the cloud. Only the map generation will use the local network.
+
+> Note: Some vacuum don't support the local mode.
+
+
 ### Get authentifications data
 
 device id, token, user id and authentication code can be retrieved using the Proscenic robotic application :
@@ -40,10 +47,10 @@ device id, token, user id and authentication code can be retrieved using the Pro
 3. Open the proscenic application, and open the vacuum view
 4. Reopen  Packet capture
     1. Click on the first line
-    2. Click on the line `<your_vacuum_ip>:8888`
+    2. Click on the line `47.91.67.181:20008`
     3. Get you informations ![screenshot](./doc/packet_with_info.jpg)
 5. You can now enter your informations on home assistant
-6. you can add your vacuum on lovelace ui entities
+6. You can add your vacuum on lovelace ui entities
     1. You can simply add it as an entity
     2. You can use the [vacuum-card](https://github.com/denysdovhan/vacuum-card)
 
