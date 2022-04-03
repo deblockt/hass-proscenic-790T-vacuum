@@ -81,14 +81,32 @@ class Vacuum():
         self.listner.append(subscriber)
 
     async def clean(self):
-        await self._send_command(b'{"transitCmd":"100"}')
+        #await self._send_command(b'{"transitCmd":"100"}')
+        await self._send_custom_command(b'000055aa000000020000000d00000037332e3300000000000000060002ffdf06a055475a70cde3ecbf4bbed6795b1d8e2b0e0297d979a9064945ceb976887f245087140000aa55')
 
     async def stop(self):
-        await self._send_command(b'{"transitCmd":"102"}')
+        #await self._send_command(b'{"transitCmd":"102"}')
+        await self._send_custom_command(b'000055aa000000050000000d00000037332e33000000000000000e0002ffdf06a055475a70cde3ecbf4bbed6795b1d8e2b0e0297d979a9064945ceb976887fa81d514f0000aa55')
 
     async def return_to_base(self):
-        await self._send_command(b'{"transitCmd":"104"}')
+        #await self._send_command(b'{"transitCmd":"104"}')
+        await self._send_custom_command(b'000055aa000000030000000d00000037332e3300000000000000070002ffdfe37c9fb3836d051175b886e87b30b3ee0816ae1fdcb0838294d011d59b4a448e181652bf0000aa55')
 
+    async def _send_custom_command(self, command: bytes):
+
+        try:
+            #TODO: make port customisable
+            (_, writer) = await asyncio.open_connection(self.ip, 6668, loop = self.loop)
+
+            _LOGGER.debug('send command {}'.format(str(command)))
+
+            writer.write(command)
+            await writer.drain()
+
+        except OSError:
+            raise VacuumUnavailable('can not connect to the vacuum. Turn on the physical switch button.')
+
+    # old function
     async def _send_command(self, command: bytes, input_writer = None):
         try:
             header = b'\xd2\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\xeb\x27\xea\x27\x00\x00\x00\x00\x00\x00'

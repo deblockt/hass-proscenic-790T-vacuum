@@ -1,4 +1,6 @@
-# Home assistant proscenic 790T vacuum integration
+# Home assistant proscenic 800T vacuum integration
+
+THE DESCRIPTION BELOW IS OUTDATED (it refers to the 790T model)
 
 [![GitHub release](https://img.shields.io/github/release/deblockt/hass-proscenic-790T-vacuum)](https://github.com/deblockt/hass-proscenic-790T-vacuum/releases/latest)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)

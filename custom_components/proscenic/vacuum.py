@@ -94,7 +94,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, update_before_add = False)
 
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the 790T vacuums."""
     _LOGGER.warn("Proscenic vacuum integration yaml configuration is now deprecated. You should configure the integration using the UI.")
@@ -113,7 +112,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.loop.create_task(device.start_map_generation())
     _LOGGER.debug("Adding 790T Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, update_before_add = False)
-
 
 class ProscenicVacuum(VacuumEntity):
     """790T Vacuums such as Deebot."""
