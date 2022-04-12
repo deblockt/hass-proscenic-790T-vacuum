@@ -63,6 +63,8 @@ device id, token, user id and authentication code can be retrieved using the Pro
 The camera entity will be automaticaly added.
 The proscenic cloud is used to generate the map.
 
+> ⚠️ 🚨: updating to 0.0.10 you should remove the integration and re-add it using cloud configuration to keep the map generation working
+
 ## Available attributes
 
 Theses attributes are available to be displayed on lovelace-ui:
