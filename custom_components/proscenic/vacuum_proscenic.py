@@ -6,7 +6,7 @@ from enum import Enum
 import logging
 from .vacuum_map_generator import build_map
 
-from .const import get_or_default, LOCAL_MODE, CLOUD_MODE, CONF_TARGET_ID, CONF_DEVICE_ID, CONF_AUTH_CODE, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_MAP_PATH, DEFAULT_CONF_MAP_PATH, DEFAULT_CONF_SLEEP, CLOUD_PROSCENIC_IP, CLOUD_PROSCENIC_PORT
+from .const import get_or_default, LOCAL_MODE, CLOUD_MODE, CONF_TARGET_ID, CONF_DEVICE_ID, CONF_AUTH_CODE, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, DEFAULT_CONF_SLEEP, CLOUD_PROSCENIC_IP, CLOUD_PROSCENIC_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,18 +27,6 @@ ERROR_CODES = {
     '3': 'Power switch is not switched on during charging'
 }
 
-def _extract_json(response):
-    first_index = response.find(b'{')
-    last_index = response.rfind(b'}')
-    if first_index >= 0 and last_index >= 0:
-        try:
-            return json.loads(response[first_index:(last_index + 1)])
-        except:
-            _LOGGER.exception('error decoding json {}'.format(response[first_index:(last_index + 1)]))
-            return None
-
-    return None
-
 @dataclass
 class VacuumState:
     """Class for keeping track of an item in inventory."""
@@ -47,6 +35,13 @@ class VacuumState:
     fan_speed: int = None
     error_code: str = None
     error_detail: str = None
+
+@dataclass
+class VacuumMap:
+    """Class for keeping track of an item in inventory."""
+    map_svg: str = None
+    last_clear_area: int = None
+    last_clear_duration: int = None
 
 class Vacuum():
 
@@ -60,20 +55,23 @@ class Vacuum():
         self.work_state = WorkState.CHARGING
         self.last_clear_area = None
         self.last_clear_duration = None
+        self.map_svg = None
         self.listner = []
         self.loop = loop
         self.auth = auth
         self.device_id = auth[CONF_DEVICE_ID]
         self.target_id = get_or_default(auth, CONF_TARGET_ID, auth[CONF_DEVICE_ID])
         self.sleep_duration_on_exit = get_or_default(config, CONF_SLEEP, DEFAULT_CONF_SLEEP)
-        self.map_path = get_or_default(config, CONF_MAP_PATH, DEFAULT_CONF_MAP_PATH)
         self.cloud = ProscenicCloud(auth, loop, self.sleep_duration_on_exit)
         self.cloud.add_device_state_updated_handler(lambda state: self._update_device_state(state))
+        self.cloud.add_map_updated_handler(lambda map_data: self._update_map_data(map_data))
         self.map_generator_task = None
 
     async def listen_state_change(self):
         try:
             await self.cloud.start_state_refresh_loop()
+        except asyncio.exceptions.CancelledError:
+            _LOGGER.info('the asyncio is cancelled. Stop to listen proscenic vacuum state update.')
         except:
             _LOGGER.exception('error while listening proscenic vacuum state change')
 
@@ -89,24 +87,20 @@ class Vacuum():
     async def return_to_base(self):
         await self._send_command(b'{"transitCmd":"104"}')
 
-    async def _send_command(self, command: bytes, input_writer = None):
+    async def _send_command(self, command: bytes):
         try:
             header = b'\xd2\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\xeb\x27\xea\x27\x00\x00\x00\x00\x00\x00'
             body = b'{"cmd":0,"control":{"authCode":"' \
                 + str.encode(self.auth[CONF_AUTH_CODE]) \
                 + b'","deviceIp":"' + str.encode(self.ip) + b'","devicePort":"8888","targetId":"' \
-                + str.encode(self.target_id if self.mode == CLOUD_MODE and not input_writer else self.device_id) \
+                + str.encode(self.target_id if self.mode == CLOUD_MODE else self.device_id) \
                 + b'","targetType":"3"},"seq":0,"value":' \
                 + command  \
                 + b',"version":"1.5.11"}'
             _LOGGER.debug('send command {}'.format(str(body)))
 
-            if self.mode == LOCAL_MODE or input_writer:
-                if not input_writer:
-                    (_, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
-                else:
-                    writer = input_writer
-
+            if self.mode == LOCAL_MODE:
+                (_, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
                 writer.write(header + body)
                 await writer.drain()
             else:
@@ -114,58 +108,19 @@ class Vacuum():
         except OSError:
             raise VacuumUnavailable('can not connect to the vacuum. Turn on the physical switch button.')
 
-    async def _wait_for_map_input(self):
-        while True:
+    async def _map_generation_loop(self):
+        while self.work_state == WorkState.CLEANING:
             try:
-                if self.work_state == WorkState.CLEANING:
-                    _LOGGER.debug('try to get the map')
-                    data = await asyncio.wait_for(self._get_map(), timeout=60.0)
-                    if data:
-                        _LOGGER.info('receive map {}'.format(data))
-                        json = _extract_json(str.encode(data))
-                        if 'value' in json:
-                            value = json['value']
-                            if 'map' in value:
-                                build_map(value['map'], value['track'], self.map_path)
-                            if 'clearArea' in value:
-                                self.last_clear_area = int(value['clearArea'])
-                            if 'clearTime' in value:
-                                self.last_clear_duration = int(value['clearTime'])
-                            self._call_listners()
-                    await asyncio.sleep(5)
-                else:
-                    _LOGGER.debug('The cleaning session is ended. End of map generation process.')
-                    return
-            except ConnectionResetError:
-                await asyncio.sleep(60)
-            except asyncio.TimeoutError:
-                _LOGGER.error('unable to get map on time')
-
-    async def _get_map(self):
-        _LOGGER.debug('opening the socket to get the map')
-        (reader, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
-        _LOGGER.debug('send the command to get the map')
-        await self._send_command(b'{"transitCmd":"131"}', writer)
-        read_data = ''
-        while True:
-            data = await reader.read(1000)
-            if data == b'':
-                _LOGGER.debug('No data read during map generation.')
-                break
-            try:
-                read_data = read_data + data.decode()
-                _LOGGER.debug('map generation. read data {}'.format(read_data))
-                nb_openning = read_data.count('{')
-                nb_close = read_data.count('}')
-                if nb_openning > 0 and nb_openning == nb_close:
-                    _LOGGER.info('map generation. return valid json {}'.format(read_data))
-                    return read_data
-                elif nb_close > nb_openning:
-                    _LOGGER.info('map generation. malformed json json {}'.format(read_data))
-                    read_data = ''
+                await self._send_command(b'{"transitCmd":"131"}')
+                await asyncio.sleep(5)
+            except asyncio.exceptions.CancelledError:
+                _LOGGER.info('the asyncio is cancelled. Stop the map generation loop.')
+                return
             except:
-                _LOGGER.debug('unreadable data {}'.format(data))
-                read_data = ''
+                _LOGGER.exception('unknown error during map generation.')
+                return
+
+        _LOGGER.debug('The cleaning session is ended. End of map generation process.')
 
     def _call_listners(self):
         for listner in self.listner:
@@ -184,12 +139,19 @@ class Vacuum():
         if self.work_state == WorkState.CLEANING:
             if not self.map_generator_task or self.map_generator_task.done():
                 _LOGGER.debug('Vacuum is cleaning. Start the map generation.')
-                self.map_generator_task = self.loop.create_task(self._wait_for_map_input())
+                self.map_generator_task = self.loop.create_task(self._map_generation_loop())
             else:
                 _LOGGER.debug('Vacuum is cleaning. Do not restart map generation process, because it is already running.')
 
         self._call_listners()
 
+    def _update_map_data(self, map: VacuumMap):
+        if map.last_clear_area:
+            self.last_clear_area = map.last_clear_area
+        if map.last_clear_duration:
+            self.last_clear_duration = map.last_clear_duration
+        if map.map_svg:
+            self.map_svg = map.map_svg
 
 class ProscenicCloud:
     def __init__(self, auth, loop, sleep_duration_on_exit):
@@ -197,6 +159,7 @@ class ProscenicCloud:
         self._writer = None
         self._state = 'disconnected'
         self._device_state_updated_handlers = []
+        self._map_updated_handlers = []
         self._loop = loop
         self._auth = auth
         self._sleep_duration_on_exit = sleep_duration_on_exit
@@ -205,6 +168,9 @@ class ProscenicCloud:
 
     def add_device_state_updated_handler(self, handler):
         self._device_state_updated_handlers.append(handler)
+
+    def add_map_updated_handler(self, handler):
+        self._map_updated_handlers.append(handler)
 
     async def send_command(self, command):
         await self._connect()
@@ -272,12 +238,46 @@ class ProscenicCloud:
         self.writer.write(body)
         await self.writer.drain() # manage error (socket closed)
 
+    async def _wait_data_from_cloud(self):
+        read_data = b''
+
+        while True:
+            data = await self.reader.read(1000)
+            if data == b'':
+                return read_data
+
+            _LOGGER.debug('receive "{}"'.format(data))
+            read_data = read_data + data
+
+            last_opening_brace_index = read_data.find(b'{')
+
+            if last_opening_brace_index >= 0:
+                try:
+                    decoded_data = read_data[last_opening_brace_index:].decode()
+
+                    first_carriage_return_index = decoded_data.find('\n')
+                    if first_carriage_return_index > 0:
+                        # if the message contains a \n, we read only the first part of the message. The second part is ignored
+                        decoded_data = decoded_data[:(first_carriage_return_index + 1)]
+
+                    nb_openning = decoded_data.count('{')
+                    nb_close = decoded_data.count('}')
+                    if nb_openning > 0 and nb_openning == nb_close:
+                        _LOGGER.debug('receive json from proscenic cloud {}'.format(decoded_data))
+                        last_closing_brace_index = decoded_data.rfind('}')
+                        json_string = decoded_data[0:(last_closing_brace_index + 1)]
+                        return json.loads(json_string)
+                    elif nb_close > nb_openning:
+                        _LOGGER.warn('malformed json received from cloud: {}'.format(read_data))
+                        read_data = b''
+                except UnicodeDecodeError:
+                    _LOGGER.exception('decoding issue for message {}'.format(read_data))
+                    read_data = b''
+
     async def _wait_for_state_refresh(self):
         while self._state != 'disconnected':
-            data = await self.reader.read(1000)
+            data = await self._wait_data_from_cloud()
             if data != b'':
-                _LOGGER.debug('receive from state refresh: {}'.format(str(data)))
-                data = _extract_json(data)
                 if data and 'msg' in data and data['msg'] == 'exit succeed':
                     _LOGGER.warn('receive exit succeed - I have been disconnected')
                     self._state = 'disconnected'
@@ -288,7 +288,9 @@ class ProscenicCloud:
                         self._connectedFuture.set_result(True)
                 elif data and 'value' in data:
                     values = data['value']
-                    if not 'errRecordId' in values:
+                    if 'map' in values:
+                        self._map_received(values)
+                    elif not 'errRecordId' in values:
                         state = VacuumState()
 
                         if 'workState' in values and values['workState'] != '':
@@ -312,6 +314,19 @@ class ProscenicCloud:
                 _LOGGER.warn('receive empty message - I have been disconnected')
                 self._state = 'disconnected'
 
+    def _map_received(self, value):
+        map = VacuumMap()
+
+        if 'map' in value:
+            map.map_svg = build_map(value['map'], value['track'])
+        if 'clearArea' in value:
+            map.last_clear_area = int(value['clearArea'])
+        if 'clearTime' in value:
+            map.last_clear_duration = int(value['clearTime'])
+
+        for listner in self._map_updated_handlers:
+            listner(map)
+
     async def _wait_and_rererun_refresh_loop(self):
         _LOGGER.debug('sleep {} second before reconnecting'.format(self._sleep_duration_on_exit))
         await asyncio.sleep(self._sleep_duration_on_exit)
@@ -321,6 +336,7 @@ class ProscenicCloud:
         _LOGGER.debug('update the vacuum state: {}'.format(str(device_state)))
         for listner in self._device_state_updated_handlers:
             listner(device_state)
+
 
 class VacuumUnavailable(Exception):
     pass

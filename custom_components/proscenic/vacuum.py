@@ -33,7 +33,7 @@ from .vacuum_proscenic import Vacuum, WorkState
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from .const import get_or_default, LOCAL_MODE, DOMAIN, CONF_CONNECTION_MODE, CONF_DEVICE_ID, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_AUTH_CODE, CONF_MAP_PATH, DEFAULT_CONF_SLEEP, DEFAULT_CONF_MAP_PATH, CONF_TARGET_ID
+from .const import get_or_default, LOCAL_MODE, DOMAIN, CONF_CONNECTION_MODE, CONF_DEVICE_ID, CONF_TOKEN, CONF_USER_ID, CONF_SLEEP, CONF_AUTH_CODE, DEFAULT_CONF_SLEEP, CONF_TARGET_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USER_ID): cv.string,
     vol.Required(CONF_AUTH_CODE): cv.string,
     vol.Optional(CONF_SLEEP, default = DEFAULT_CONF_SLEEP): int,
-    vol.Optional(CONF_MAP_PATH, default = DEFAULT_CONF_MAP_PATH): cv.string,
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -74,20 +73,8 @@ WORK_STATE_TO_STATE = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the 790T vacuums."""
     config = hass.data[DOMAIN][config_entry.entry_id]
-    conf_sleep = config[CONF_SLEEP] if CONF_SLEEP in config else DEFAULT_CONF_SLEEP
-    conf_map_path = config[CONF_MAP_PATH] if CONF_MAP_PATH in config else DEFAULT_CONF_MAP_PATH
+    device = config['device']
 
-    auth = {
-        CONF_DEVICE_ID: config[CONF_DEVICE_ID],
-        CONF_TOKEN: config[CONF_TOKEN],
-        CONF_USER_ID: config[CONF_USER_ID],
-        CONF_AUTH_CODE: config[CONF_AUTH_CODE],
-        CONF_TARGET_ID: get_or_default(config, CONF_TARGET_ID, config[CONF_DEVICE_ID])
-    }
-
-    ip = get_or_default(config, CONF_HOST, None)
-    mode = get_or_default(config, CONF_CONNECTION_MODE, LOCAL_MODE)
-    device = Vacuum(auth, ip, mode, loop = hass.loop, config = {CONF_SLEEP: conf_sleep, CONF_MAP_PATH: conf_map_path})
     vacuums = [ProscenicVacuum(device, config[CONF_DEVICE_ID])]
     hass.loop.create_task(device.listen_state_change())
 
@@ -107,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     }
     name = config[CONF_NAME] if CONF_NAME in config else '790T vacuum'
     ip = config[CONF_HOST] if CONF_HOST in config else None
-    device = Vacuum(auth, ip, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP], CONF_MAP_PATH: config[CONF_MAP_PATH]})
+    device = Vacuum(auth, ip, loop = hass.loop, config = {CONF_SLEEP: config[CONF_SLEEP]})
     vacuums = [ProscenicVacuum(device, name)]
     hass.loop.create_task(device.listen_state_change())
     hass.loop.create_task(device.start_map_generation())

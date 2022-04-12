@@ -6,11 +6,9 @@ CONF_TOKEN = 'token'
 CONF_USER_ID = 'userId'
 CONF_SLEEP = 'sleep_duration_on_exit'
 CONF_AUTH_CODE = 'authCode'
-CONF_MAP_PATH = 'map_path'
 CONF_CONNECTION_MODE = 'connection_mode'
 
 DEFAULT_CONF_SLEEP = 60
-DEFAULT_CONF_MAP_PATH = '/tmp/proscenic_vacuum_map.svg'
 
 CLOUD_PROSCENIC_IP = '47.91.67.181'
 CLOUD_PROSCENIC_PORT = 20008
