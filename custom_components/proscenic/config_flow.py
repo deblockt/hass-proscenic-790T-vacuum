@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.selector import SelectSelector
 
-from .const import LOCAL_MODE, CLOUD_MODE, CONF_CONNECTION_MODE, CONF_DEVICE_ID, CONF_TARGET_ID, CONF_TOKEN, CONF_USER_ID, CONF_AUTH_CODE, CONF_SLEEP, CONF_MAP_PATH, DEFAULT_CONF_MAP_PATH, DEFAULT_CONF_SLEEP
+from .const import LOCAL_MODE, CLOUD_MODE, CONF_CONNECTION_MODE, CONF_DEVICE_ID, CONF_TARGET_ID, CONF_TOKEN, CONF_USER_ID, CONF_AUTH_CODE, CONF_SLEEP, DEFAULT_CONF_SLEEP
 
 class ProscenicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -73,16 +73,12 @@ class ProscenicOptionsFlowHandler(config_entries.OptionsFlow):
         self._sleep_duration_on_exit = self.config_entry.options.get(
             CONF_SLEEP, DEFAULT_CONF_SLEEP
         )
-        self._map_path = self.config_entry.options.get(
-            CONF_MAP_PATH, DEFAULT_CONF_MAP_PATH
-        )
 
     async def async_step_init(self, user_input=None):
         """Handle a flow initialized by the user."""
         options_schema = vol.Schema(
             {
-                vol.Required(CONF_SLEEP, default = self._sleep_duration_on_exit): int,
-                vol.Required(CONF_MAP_PATH, default = self._map_path): str,
+                vol.Required(CONF_SLEEP, default = self._sleep_duration_on_exit): int
             },
         )
 

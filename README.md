@@ -33,8 +33,8 @@ Add your device via the Integration menu.
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=proscenic)
 
 You can choose between two connection mode:
-- *local*: the integration will use your local network to contact your vacuum (send command to start/stop). But the cloud will be used to get vacuum status.
-- *cloud*: All interactions are done using the cloud. Only the map generation will use the local network.
+- *local*: the integration will use your local network to contact your vacuum (send command to start/stop). But the cloud will be used to get vacuum status, and the cleaning map.
+- *cloud*: All interactions are done using the cloud.
 
 > Note: Some vacuum don't support the local mode.
 
@@ -61,8 +61,7 @@ device id, token, user id and authentication code can be retrieved using the Pro
 ![map](./doc/map.png)
 
 The camera entity will be automaticaly added.
-The map is stored on your file system, the path is `/tmp/proscenic_vacuum_map.svg`.
-The path can be updated on the integration options.
+The proscenic cloud is used to generate the map.
 
 ## Available attributes
 

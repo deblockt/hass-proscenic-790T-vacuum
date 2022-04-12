@@ -7,7 +7,7 @@ cell_size=5
 min_image_height=250
 min_image_width=450
 
-def build_map(m, track, file_path):
+def build_map(m, track):
     inp = base64.b64decode(m)
     d = struct.unpack('<' + 'B' * (len(inp)), inp)
     full = [['.' for i in range(100)] for j in range(110)]
@@ -86,7 +86,7 @@ def build_map(m, track, file_path):
         min_y = min_y - ((min_image_height - map_height) / 2) // cell_size
         map_height = min_image_height
 
-    dwg = svgwrite.Drawing(file_path, size=(map_width, map_height))
+    dwg = svgwrite.Drawing(size=(map_width, map_height))
 
     for i in range(len(wallx)):
         dwg.add(dwg.rect(insert=((wallx[i] - min_x) * cell_size, map_height - ((wally[i] - min_y) * cell_size)), size=(cell_size, cell_size), fill='#000000', fill_opacity=0.7))
@@ -103,7 +103,8 @@ def build_map(m, track, file_path):
         dwg_path.push('L{},{}'.format(draw_path[2*i], draw_path[2*i+1]))
 
     dwg.add(dwg_path)
-    dwg.save()
+
+    return dwg.tostring()
 
 #m = "AAAAAAAAZABkwvIAFUDXABXCVUDVABaqwlXVAFbCqqlA1ABmw6pUVUDSAGbDqqTCVVDRAFbDqqVqqpDRAFbDqqVVqJDRAFqqqaqlVqSQ0QBaqpZqwqqkkNEAWqqZmsKqpJDRAFqqmWrCqqSQ0QAVVapawqqkkNIABVVawqqkkNQAFsKqpJDUABbCqqWQ1AAWwqqplNQAFsOqpdQAGsOqqUDTABrDqppQ0wAaw6qmkNMAFWrCqplQ0wAFw6qZQNMABcOqmkDTAAXDqplA0wAFw6pJQNMABcOqSdQABalqqkpA0wBWqVqqolDTAGqkFqqmkNIAAWqkBqqklNIAAaqQBqqkkNIAAaqQBqqkkNIAAZqQGqqklVTRAAGqkCqqpaqk0QABqpAqw6qoFNAAAaqQFqqlqpqk0AAGqpAqqqWqkKTQAAaqkCrDqlWU0AAGqpQaqsKWqZDQAAaqpGqqlqqpoNAABaqpasKqpalo0AABWqqawqpWqmqA0AAaxKpVwqrRABVVaqpaw6rSAAFVmcSq0wABVVbCVVbVAAVAAALYAALYAAVA0P0A"
 #track = "ASg+ATI0NDQrNCs1KzM2MzYyNzIgMiEyHDIcMRoxIDEfMR4wGTAZLxgvHS8cLhcuFy0cLRwsFywYKxwrHCoYKhgpHCkcKBgoGCccJxwmGSYZJR0lHSQZJBojHiMdIhsiHiIeIRshHyEfICAgGyAcHxsfKB8oHhseHB4bHhsdKB0oHBwcHBspGygaGhoaGSgZJxgaGBoXJhclFhoWGhUlFSUUGhQaEyUTJRIZEhkRJRElEBgQGA8XDyUPJQ4mDh4OHw0fDh8NIA4hDiINJg0lDCIMIQ0hDCENHA4NDg0NHA0cDA0MDQsaCxkKDgoOCRcJEQkPCA4IDg8NDxYPFBANEA0RFBEUEhESDxEhICcgJyEgISEiJyInIygjIiMjJCkkKSUjJSMmKSYpJyMnIygpKCkpIikiKiEqLiouKy8rLyowKjArKyssKywsMCwvLC8tIS0iLSEtIi4pLiguKC8hLyEwLTAtLysvMi8yMDAwMDEzMTAxMzE1MjUxMS4yLiwuKSwpKysqLSooLCsuKzEiMSIzLjMqNCk0NjQkNCQzIDMgMhoyGjEZMRkwGDAXLxctFy4XLBgqGCYZJhgmGCUZJRkkGiQcIhwbGhsaGhsYGxUaFBoSGRIYEBgRFxAWERcRFhIWExcTExMTEg4SDg4PDg8JFAkUChoKHAwdDB0OHg4eDx8PHxAfDx8QIBAhDiENIw0hDSEOIg0oDScNKA0oGCkYKRkqGSoaKxorGywbKxwqHCodKx0qHSoeKx4qHiohKiAqISshKyIqIisjKyQtJCwlLCgtKCwoLCkxKTEqMioyKzQrNCw1LDQsNSw1KzUsNCw0LzUvNTA2MDYyNzM3Nw=="
