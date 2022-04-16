@@ -153,11 +153,13 @@ class Vacuum():
         if map.map_svg:
             self.map_svg = map.map_svg
 
+PROSCENIC_CLOUD_DISONNECTED = 'disconnected'
+
 class ProscenicCloud:
     def __init__(self, auth, loop, sleep_duration_on_exit):
         self._reader = None
         self._writer = None
-        self._state = 'disconnected'
+        self._state = PROSCENIC_CLOUD_DISONNECTED
         self._device_state_updated_handlers = []
         self._map_updated_handlers = []
         self._loop = loop
@@ -176,8 +178,13 @@ class ProscenicCloud:
         await self._connect()
 
         header = b'\xd0\x00\x00\x00\xfa\x00\xc8\x00\x00\x00\x24\x27\x25\x27\x00\x00\x00\x00\x00\x00'
-        self.writer.write(header + command)
-        await self.writer.drain()
+        try:
+            self.writer.write(header + command)
+            await self.writer.drain()
+        except TimeoutError:
+            _LOGGER.debug('Timeout sending command to proscenic cloud. Reconnect and retry.')
+            self._state = PROSCENIC_CLOUD_DISONNECTED
+            self.send_command(command)
 
     # refresh loop is used to read vacuum update (status, battery, etc...)
     async def start_state_refresh_loop(self):
@@ -190,11 +197,21 @@ class ProscenicCloud:
         try:
             await self._connect(wait_for_login_response = False) # we don't wait for login response, because we need the refresh loop started to know if loggin is OK
 
-            while self._state != 'disconnected':
+            while self._state != PROSCENIC_CLOUD_DISONNECTED:
                 try:
                     await asyncio.wait_for(self._wait_for_state_refresh(), timeout=60.0)
                 except asyncio.TimeoutError:
                     await self._ping()
+                except TimeoutError:
+                    self._state = PROSCENIC_CLOUD_DISONNECTED
+                    _LOGGER.debug('Timeout occurs on proscenic cloud socket. Restart refresh loop.')
+                except asyncio.exceptions.CancelledError:
+                    _LOGGER.debug('Refresh loop has been cancel by system.')
+                    self._is_refresh_loop_runing = False
+                    return
+                except:
+                    self._state = PROSCENIC_CLOUD_DISONNECTED
+                    _LOGGER.exception('Unknon error on refresh loop. Restart refresh loop.')
 
             self._is_refresh_loop_runing = False
             self._loop.create_task(self._wait_and_rererun_refresh_loop())
@@ -203,7 +220,7 @@ class ProscenicCloud:
             self._is_refresh_loop_runing = False
 
     async def _connect(self, wait_for_login_response = True):
-        if self._state == 'disconnected':
+        if self._state == PROSCENIC_CLOUD_DISONNECTED:
             _LOGGER.info('opening socket with proscenic cloud.')
             self._state = 'connecting'
             (self.reader, self.writer) = await asyncio.open_connection(CLOUD_PROSCENIC_IP, CLOUD_PROSCENIC_PORT, loop = self._loop)
@@ -275,12 +292,12 @@ class ProscenicCloud:
                     read_data = b''
 
     async def _wait_for_state_refresh(self):
-        while self._state != 'disconnected':
+        while self._state != PROSCENIC_CLOUD_DISONNECTED:
             data = await self._wait_data_from_cloud()
             if data != b'':
                 if data and 'msg' in data and data['msg'] == 'exit succeed':
                     _LOGGER.warn('receive exit succeed - I have been disconnected')
-                    self._state = 'disconnected'
+                    self._state = PROSCENIC_CLOUD_DISONNECTED
                 if data and 'msg' in data and data['msg'] == 'login succeed':
                     _LOGGER.info('connected to proscenic cloud.')
                     self._state = 'connected'
@@ -311,8 +328,8 @@ class ProscenicCloud:
 
                         self._call_state_updated_listners(state)
             else:
-                _LOGGER.warn('receive empty message - I have been disconnected')
-                self._state = 'disconnected'
+                _LOGGER.warn('receive empty message - disconnected from proscenic cloud')
+                self._state = PROSCENIC_CLOUD_DISONNECTED
 
     def _map_received(self, value):
         map = VacuumMap()
