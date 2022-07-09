@@ -100,7 +100,7 @@ class Vacuum():
             _LOGGER.debug('send command {}'.format(str(body)))
 
             if self.mode == LOCAL_MODE:
-                (_, writer) = await asyncio.open_connection(self.ip, 8888, loop = self.loop)
+                (_, writer) = await asyncio.open_connection(self.ip, 8888)
                 writer.write(header + body)
                 await writer.drain()
             else:
@@ -206,7 +206,7 @@ class ProscenicCloud:
         if self._state == 'disconnected':
             _LOGGER.info('opening socket with proscenic cloud.')
             self._state = 'connecting'
-            (self.reader, self.writer) = await asyncio.open_connection(CLOUD_PROSCENIC_IP, CLOUD_PROSCENIC_PORT, loop = self._loop)
+            (self.reader, self.writer) = await asyncio.open_connection(CLOUD_PROSCENIC_IP, CLOUD_PROSCENIC_PORT)
             await self._login(wait_for_login_response)
 
     async def _login(self, wait_for_login_response = True):
